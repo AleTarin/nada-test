@@ -1,7 +1,8 @@
-import React from "react";
-import "./styles.css";
+import React, { useMemo, useRef } from "react";
+import "./style.css";
 import items from "./items";
 import HighLightedItem from "./item";
+import { chunkArray, useWidth } from "./utilities";
 
 import { Container, Row } from "react-bootstrap";
 
@@ -10,28 +11,24 @@ const GRID = {
   DESKTOP: [[3], [4], [5], [3, 3], [4, 3], [4, 4], [5, 4]]
 };
 
-function chunkArray(array, sizes = []) {
-  let size = sizes.length ? sizes.shift() : array.length;
-  if (array.length <= size) {
-    return [array];
-  }
-  return [array.slice(0, size), ...chunkArray(array.slice(size), sizes)];
-}
-
 export default function App() {
-  const imageGrid = React.useMemo(() => {
-    let displayedItems = 5;
-    let deviceType = "MOBILE";
+  const containerRef = useRef(null);
+  const [width] = useWidth(containerRef);
+  const displayedItems = 5;
+  const maxDisplayedItems = 5;
+  const deviceType = "DESKTOP";
+  const itemsWidth = width / maxDisplayedItems;
+
+  const imageGrid = useMemo(() => {
     return chunkArray(
       items.slice(0, displayedItems),
       GRID[deviceType][displayedItems - 3]
     );
   }, []);
-  console.log("GRID", imageGrid);
+
   return (
-    <Container>
+    <div ref={containerRef}>
       {imageGrid.map((serviceRow, indexRow) => {
-        console.log(serviceRow, indexRow);
         return (
           <Row
             key={indexRow}
@@ -39,20 +36,19 @@ export default function App() {
               `service-row-${indexRow}`,
               "d-flex",
               "align-content-center",
-              "justify-content-between"
+              "justify-content-center"
             ].join(" ")}
           >
-            {indexRow}
             {serviceRow.map((serviceItem, indexItem) => (
               <HighLightedItem
+                width={itemsWidth}
                 key={`${indexRow}-${indexItem}`}
-                row={indexRow}
-                data={serviceItem}
+                {...serviceItem}
               />
             ))}
           </Row>
         );
       })}
-    </Container>
+    </div>
   );
 }
